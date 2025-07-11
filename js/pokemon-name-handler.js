@@ -1,8 +1,4 @@
-/**
- * Pokemon Name Handler
- * Manages the display and input of Pokemon names
- * Allows users to click on "Enter the name" to set a custom name
- */
+/*Pokemon Name Input Handler*/
 
 function initializePokemonNameHandler() {
     const nameDisplay = document.getElementById('pokemonNameDisplay');
@@ -13,68 +9,71 @@ function initializePokemonNameHandler() {
         return;
     }
 
-    // Load saved name from localStorage if available
-    const savedName = localStorage.getItem(`pokemon_${window.pokemonData.name}_customName`);
-    if (savedName) {
-        nameDisplay.textContent = savedName;
-    }
+    let currentName = '';
+    let isEditMode = false;
 
-    // Add click event to name display to show input
     nameDisplay.addEventListener('click', function() {
-        showNameInput();
-    });
-
-    // Add input event handlers
-    nameInput.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-            savePokemonName();
+        if (!isEditMode) {
+            enterEditMode();
         }
     });
 
     nameInput.addEventListener('blur', function() {
-        savePokemonName();
+        if (isEditMode) {
+            saveAndExitEditMode();
+        }
     });
 
-    /**
-     * Shows the name input field and hides the display
-     */
-    function showNameInput() {
+    nameInput.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            saveAndExitEditMode();
+        } else if (event.key === 'Escape') {
+            cancelEdit();
+        }
+    });
+
+    function enterEditMode() {
+        isEditMode = true;
+        nameInput.value = currentName;
         nameDisplay.style.display = 'none';
         nameInput.style.display = 'block';
-        nameInput.value = nameDisplay.textContent === 'Enter the name' ? '' : nameDisplay.textContent;
         nameInput.focus();
         nameInput.select();
     }
 
-    /**
-     * Saves the entered name and updates the display
-     */
-    function savePokemonName() {
-        const enteredName = nameInput.value.trim();
+    function saveAndExitEditMode() {
+        const newName = nameInput.value.trim();
         
-        // If empty, revert to original name or default text
-        if (!enteredName) {
-            nameDisplay.textContent = 'Enter the name';
+        if (newName && newName.length > 0) {
+            currentName = newName;
+            nameDisplay.textContent = currentName;
         } else {
-            nameDisplay.textContent = enteredName;
-            // Save to localStorage for persistence
-            localStorage.setItem(`pokemon_${window.pokemonData.name}_customName`, enteredName);
+            nameDisplay.textContent = 'Enter the name';
         }
+        
+        exitEditMode();
+    }
 
-        // Hide input and show display
+    function cancelEdit() {
+        nameInput.value = currentName;
+        exitEditMode();
+    }
+
+    function exitEditMode() {
+        isEditMode = false;
         nameInput.style.display = 'none';
         nameDisplay.style.display = 'block';
     }
 
-    /**
-     * Gets the current Pokemon name (custom or default)
-     * @returns {string} The current Pokemon name
-     */
-    function getCurrentPokemonName() {
-        const displayText = nameDisplay.textContent;
-        return displayText === 'Enter the name' ? window.pokemonData.name : displayText;
+    function getCurrentName() {
+        return currentName;
     }
 
-    // Make functions available globally if needed
-    window.getCurrentPokemonName = getCurrentPokemonName;
+    function setName(name) {
+        currentName = name;
+        nameDisplay.textContent = currentName || 'Enter the name';
+    }
+
+    window.getPokemonName = getCurrentName;
+    window.setPokemonName = setName;
 } 

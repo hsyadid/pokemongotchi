@@ -1,5 +1,4 @@
-// Enhanced Pokemon Interactive Behavior System
-// Provides dynamic movement patterns, flipping, and various animations
+/* Enhanced Pokemon Interactive Behavior System*/
 
 function initializeEnhancedPokemonBehavior() {
     const pokemon = document.getElementById('pokemonSprite');
@@ -7,14 +6,12 @@ function initializeEnhancedPokemonBehavior() {
     
     if (!pokemon || !gameArea) return;
 
-    // Pokemon state variables
     let isMoving = false;
     let currentDirection = 'right';
-    let activityLevel = Math.random() * 100; // 0-100, determines how active the Pokemon is
+    let activityLevel = Math.random() * 100;
     let lastActivity = Date.now();
     let moodCycle = 0;
 
-    // Get game area dimensions
     const getGameAreaBounds = () => {
         const rect = gameArea.getBoundingClientRect();
         const pokemonRect = pokemon.getBoundingClientRect();
@@ -24,9 +21,7 @@ function initializeEnhancedPokemonBehavior() {
         };
     };
 
-    // Get movement constraints based on Pokemon environment
     const getMovementConstraints = () => {
-        // Try to get type from pokemonData first, then from gameArea class as fallback
         let pokemonType = window.pokemonData?.type;
         if (!pokemonType) {
             const gameAreaClasses = gameArea.className;
@@ -39,7 +34,6 @@ function initializeEnhancedPokemonBehavior() {
         
         const bounds = getGameAreaBounds();
         
-        // Sky and underwater Pokemon can move freely in entire area
         if (pokemonType === 'sky' || pokemonType === 'underwater') {
             return {
                 minX: 0,
@@ -49,20 +43,16 @@ function initializeEnhancedPokemonBehavior() {
             };
         }
         
-        // Beach, jungle, and flat Pokemon are restricted to lower ground area
-        // This simulates that they cannot fly or swim, so they stay on the ground
         return {
             minX: 0,
             maxX: bounds.width,
-            minY: bounds.height * 0.75, // Can only move in bottom 25% of area (ground level)
-            maxY: bounds.height * 0.95  // Leave small space from bottom edge
+            minY: bounds.height * 0.75,
+            maxY: bounds.height * 0.95
         };
     };
 
-    // Random movement patterns with environment constraints
     const movementPatterns = {
         explore: () => {
-            // Random exploration movement within constraints
             const constraints = getMovementConstraints();
             const targetX = constraints.minX + Math.random() * (constraints.maxX - constraints.minX);
             const targetY = constraints.minY + Math.random() * (constraints.maxY - constraints.minY);
@@ -70,7 +60,6 @@ function initializeEnhancedPokemonBehavior() {
         },
         
         patrol: () => {
-            // Back and forth patrol within constraints
             const constraints = getMovementConstraints();
             const currentX = parseInt(pokemon.style.left) || 0;
             const targetX = currentX < (constraints.maxX / 2) ? constraints.maxX * 0.8 : constraints.maxX * 0.2;
@@ -79,7 +68,6 @@ function initializeEnhancedPokemonBehavior() {
         },
         
         circle: () => {
-            // Circular movement within constraints
             const constraints = getMovementConstraints();
             const centerX = (constraints.minX + constraints.maxX) / 2;
             const centerY = (constraints.minY + constraints.maxY) / 2;
@@ -95,7 +83,6 @@ function initializeEnhancedPokemonBehavior() {
         },
         
         corner: () => {
-            // Move to accessible corners based on environment
             const constraints = getMovementConstraints();
             const corners = [
                 { x: constraints.minX, y: constraints.minY },
@@ -108,7 +95,6 @@ function initializeEnhancedPokemonBehavior() {
         }
     };
 
-    // Move Pokemon to specific coordinates
     const movePokemonTo = (targetX, targetY, duration) => {
         if (isMoving) return;
         
@@ -116,27 +102,19 @@ function initializeEnhancedPokemonBehavior() {
         const currentX = parseInt(pokemon.style.left) || 0;
         const currentY = parseInt(pokemon.style.top) || 0;
         
-        // Determine direction and flip Pokemon accordingly
-        // Pokemon sprites face left by default, so flip when moving right
         if (targetX > currentX) {
-            // Moving right - flip to face right
             pokemon.classList.add('flipped');
             currentDirection = 'right';
         } else if (targetX < currentX) {
-            // Moving left - face normal direction (left)
             pokemon.classList.remove('flipped');
             currentDirection = 'left';
         }
         
-        // Add movement class
         pokemon.classList.add('moving');
-        
-        // Animate to target position
         pokemon.style.transition = `all ${duration}ms ease-in-out`;
         pokemon.style.left = targetX + 'px';
         pokemon.style.top = targetY + 'px';
         
-        // Clear movement state after animation
         setTimeout(() => {
             isMoving = false;
             pokemon.classList.remove('moving');
@@ -145,9 +123,6 @@ function initializeEnhancedPokemonBehavior() {
         }, duration);
     };
 
-
-
-    // Various mood animations
     const moodAnimations = {
         happy: () => {
             pokemon.classList.add('excited');
@@ -165,7 +140,6 @@ function initializeEnhancedPokemonBehavior() {
         },
         
         energetic: () => {
-            // Multiple quick jumps
             for (let i = 0; i < 3; i++) {
                 setTimeout(() => {
                     pokemon.classList.add('jumping');
@@ -175,19 +149,16 @@ function initializeEnhancedPokemonBehavior() {
         }
     };
 
-    // Determine activity based on Pokemon personality and time
     const getActivityFrequency = () => {
         const timeSinceLastActivity = Date.now() - lastActivity;
-        const baseFrequency = 3000 + (100 - activityLevel) * 100; // More active Pokemon move more often
+        const baseFrequency = 3000 + (100 - activityLevel) * 100;
         
-        // Add some randomness and mood cycles
         moodCycle = (moodCycle + 1) % 100;
-        const moodMultiplier = 0.5 + Math.sin(moodCycle * 0.1) * 0.5; // Creates cycles of high/low activity
+        const moodMultiplier = 0.5 + Math.sin(moodCycle * 0.1) * 0.5;
         
         return baseFrequency * moodMultiplier * (0.5 + Math.random());
     };
 
-    // Schedule next Pokemon activity
     const scheduleNextActivity = () => {
         const frequency = getActivityFrequency();
         
@@ -200,37 +171,27 @@ function initializeEnhancedPokemonBehavior() {
         }, frequency);
     };
 
-    // Perform random activity based on Pokemon's personality
     const performRandomActivity = () => {
         lastActivity = Date.now();
         
-        // Higher activity level = more likely to move
         const shouldMove = Math.random() * 100 < activityLevel;
         
         if (shouldMove) {
-            // Choose random movement pattern
             const patterns = Object.keys(movementPatterns);
             const randomPattern = patterns[Math.floor(Math.random() * patterns.length)];
             movementPatterns[randomPattern]();
         } else {
-            // Perform mood animation instead
             const moods = Object.keys(moodAnimations);
             const randomMood = moods[Math.floor(Math.random() * moods.length)];
             moodAnimations[randomMood]();
-            
-            // Schedule next activity since we didn't move
             scheduleNextActivity();
         }
     };
 
-    // Handle click interactions
     const handlePokemonClick = (event) => {
         event.stopPropagation();
-        
-        // Increase activity level temporarily
         activityLevel = Math.min(100, activityLevel + 10);
         
-        // Immediate response to click
         if (Math.random() > 0.5) {
             moodAnimations.happy();
         } else {
@@ -238,10 +199,8 @@ function initializeEnhancedPokemonBehavior() {
             setTimeout(() => pokemon.classList.remove('jumping'), 600);
         }
         
-        // Chance to randomly turn direction when clicked
         if (Math.random() > 0.7) {
             setTimeout(() => {
-                // Randomly face left or right
                 if (Math.random() > 0.5) {
                     pokemon.classList.add('flipped');
                     currentDirection = 'right';
@@ -253,7 +212,6 @@ function initializeEnhancedPokemonBehavior() {
         }
     };
 
-    // Handle area clicks (move Pokemon to clicked location)
     const handleAreaClick = (event) => {
         if (event.target === gameArea) {
             const rect = gameArea.getBoundingClientRect();
@@ -265,34 +223,28 @@ function initializeEnhancedPokemonBehavior() {
             const targetY = Math.max(constraints.minY, Math.min(constraints.maxY, clickY));
             
             movePokemonTo(targetX, targetY, 1500);
-            
-            // Increase activity after interaction
             activityLevel = Math.min(100, activityLevel + 5);
         }
     };
 
-    // Initialize Pokemon position
     const initializePosition = () => {
         const constraints = getMovementConstraints();
         const startX = (constraints.minX + constraints.maxX) * 0.5;
-        const startY = (constraints.minY + constraints.maxY) * 0.7; // Slightly lower in allowed area
+        const startY = (constraints.minY + constraints.maxY) * 0.7;
         pokemon.style.left = startX + 'px';
         pokemon.style.top = startY + 'px';
         pokemon.style.position = 'absolute';
         
-        // Initialize facing direction (start facing left - normal sprite direction)
         pokemon.classList.remove('flipped');
         currentDirection = 'left';
     };
 
-    // Activity level decay over time
     const decayActivityLevel = () => {
         setInterval(() => {
             activityLevel = Math.max(20, activityLevel - 1);
-        }, 30000); // Decay every 30 seconds
+        }, 30000);
     };
 
-    // Pause behavior when page is not visible
     const handleVisibilityChange = () => {
         if (document.visibilityState === 'hidden') {
             pokemon.classList.remove('dancing', 'excited', 'sleepy', 'jumping');
@@ -301,26 +253,17 @@ function initializeEnhancedPokemonBehavior() {
         }
     };
 
-    // Initialize everything
     initializePosition();
-    
-    // Set up event listeners
     pokemon.addEventListener('click', handlePokemonClick);
     gameArea.addEventListener('click', handleAreaClick);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     
-    // Start the behavior system
     setTimeout(() => {
         scheduleNextActivity();
         decayActivityLevel();
-    }, 2000); // Give a 2 second delay before starting
-    
-    // Debug info (remove in production)
-    console.log(`Enhanced behavior initialized for ${window.pokemonData?.name || 'Pokemon'}`);
-    console.log(`Activity level: ${activityLevel.toFixed(1)}`);
+    }, 2000);
 }
 
-// Auto-initialize if DOM is already loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeEnhancedPokemonBehavior);
 } else {

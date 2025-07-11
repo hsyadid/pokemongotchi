@@ -1,64 +1,47 @@
-// Navbar Scroll Animation System
-// Hides navbar when scrolling down, shows when scrolling up
+/*Navbar Scroll Animation System*/
 
-(function() {
-    let lastScrollTop = 0;
-    let scrollThreshold = 50; // Minimum scroll distance to trigger animation
-    let isNavbarHidden = false;
-    
+document.addEventListener('DOMContentLoaded', function() {
     const navbar = document.querySelector('.navbar-pokegotchi');
     if (!navbar) return;
+
+    let lastScrollTop = 0;
+    let scrollTimeout;
+    const scrollThreshold = 10;
     
-    // Throttle function to limit scroll event frequency
-    function throttle(func, limit) {
-        let inThrottle;
-        return function() {
-            const args = arguments;
-            const context = this;
-            if (!inThrottle) {
-                func.apply(context, args);
-                inThrottle = true;
-                setTimeout(() => inThrottle = false, limit);
-            }
-        }
-    }
-    
+    const isIndexPage = window.location.pathname === '/' || 
+                       window.location.pathname.includes('index.html') ||
+                       (!window.location.pathname.includes('_page.html') && 
+                        window.location.pathname.split('/').pop() === '');
+
+    const triggerHeight = isIndexPage ? 
+        () => window.innerHeight * 0.5 : 
+        () => 200;
+
     function handleScroll() {
-        const currentScrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        clearTimeout(scrollTimeout);
         
-        // Prevent issues when scroll bounces at top
-        if (currentScrollTop < 0) return;
-        
-        // If we haven't scrolled enough, don't do anything
-        if (Math.abs(currentScrollTop - lastScrollTop) < scrollThreshold) return;
-        
-        // Calculate 50% of page height for index.html, or use 200px for other pages
-        const pageHeight = document.body.scrollHeight - window.innerHeight;
-        const isIndexPage = window.location.pathname.includes('index.html') || window.location.pathname === '/';
-        const triggerPoint = isIndexPage ? pageHeight * 0.5 : 200;
-        
-        if (currentScrollTop > lastScrollTop && currentScrollTop > triggerPoint) {
-            // Scrolling down - hide navbar
-            if (!isNavbarHidden) {
-                navbar.classList.add('navbar-hidden');
-                isNavbarHidden = true;
+        scrollTimeout = setTimeout(() => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            
+            if (Math.abs(scrollTop - lastScrollTop) < scrollThreshold) {
+                return;
             }
-        } else {
-            // Scrolling up - show navbar
-            if (isNavbarHidden) {
+
+            if (scrollTop > triggerHeight()) {
+                if (scrollTop > lastScrollTop) {
+                    navbar.classList.add('navbar-hidden');
+                } else {
+                    navbar.classList.remove('navbar-hidden');
+                }
+            } else {
                 navbar.classList.remove('navbar-hidden');
-                isNavbarHidden = false;
             }
-        }
-        
-        lastScrollTop = currentScrollTop;
+
+            lastScrollTop = scrollTop;
+        }, 10);
     }
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     
-    // Add scroll event listener with throttling
-    window.addEventListener('scroll', throttle(handleScroll, 100));
-    
-    // Also handle resize events to recalculate positions
-    window.addEventListener('resize', throttle(() => {
-        lastScrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    }, 250));
-})(); 
+    handleScroll();
+}); 
